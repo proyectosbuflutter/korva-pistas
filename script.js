@@ -1,10 +1,8 @@
-// ==================== DATOS ====================
+// ==================== CONFIGURACIÓN ====================
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-const horas = [
-    '07:00', '08:00', '09:00', '10:00', '11:00', '12:00',
-    '13:00', '14:00', '15:00', '16:00', '17:00', '18:00',
-    '19:00', '20:00', '21:00', '22:00', '23:00'
-];
+const HORA_INICIO = 7; // 07:00
+const HORA_FIN = 23;   // 23:00
+const ALTURA_DIA = 500; // Altura en píxeles del área de horarios
 
 let estado = {
     pistas: [{ id: 1, nombre: 'Pista 1' }],
@@ -67,7 +65,7 @@ function activarPista(id) {
     renderizarCalendario();
 }
 
-// ==================== CALENDARIO ====================
+// ==================== CALENDARIO CON ALTURA DINÁMICA ====================
 function renderizarCalendario() {
     const container = document.getElementById('weeklySchedule');
     if (!container) return;
@@ -81,35 +79,42 @@ function renderizarCalendario() {
         const esHoy = index === diaHoyIndex;
         const claseHoy = esHoy ? 'today' : '';
         const fechaMostrar = esHoy ? fechaHoy : '';
-        const diaBloqueado = estaDiaBloqueado(dia);
+        
+        // Obtener todas las reservas de este día y ordenarlas por hora
+        const reservasDia = obtenerReservasOrdenadas(dia);
         
         html += `
-            <div class="day-column ${diaBloqueado ? 'blocked' : ''}">
+            <div class="day-column">
                 <div class="day-header ${claseHoy}">
                     ${dia}
                     ${fechaMostrar ? `<span class="date">${fechaMostrar}</span>` : ''}
                 </div>
-                <div class="time-slots">
+                <div class="time-slots" style="height: ${ALTURA_DIA}px;">
         `;
         
-        horas.forEach(hora => {
-            const key = `${estado.pistaActiva}_${dia}_${hora}`;
-            const actividad = estado.horarios[key];
+        // Generar bloques (reservas + huecos libres)
+        const bloques = generarBloquesConHuecos(reservasDia);
+        
+        bloques.forEach(bloque => {
+            const top = calcularPosicionTop(bloque.horaInicio);
+            const height = calcularAlturaBloque(bloque.horaInicio, bloque.horaFin);
             
-            if (actividad) {
+            if (bloque.tipo === 'free') {
+                // Hueco libre
                 html += `
-                    <div class="time-slot occupied" onclick="openActivityModal('${dia}', '${hora}')">
-                        <span class="slot-time">${actividad.horaInicio} - ${actividad.horaFin}</span>
-                        <span class="slot-type">${actividad.tipo}</span>
-                        <span class="slot-desc">${actividad.desc}</span>
+                    <div class="time-slot free" style="top: ${top}px; height: ${height}px;">
+                        <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
+                        <span style="color: #cbd5e1; font-size: 0.7rem;">Libre</span>
                     </div>
                 `;
             } else {
+                // Reserva ocupada
                 html += `
-                    <div class="time-slot ${diaBloqueado ? 'blocked' : ''}" 
-                         onclick="${diaBloqueado ? '' : `openActivityModal('${dia}', '${hora}')`}">
-                        <span class="slot-time">${hora}</span>
-                        <span style="color: #cbd5e1; font-size: 0.7rem;">${diaBloqueado ? '---' : 'Libre'}</span>
+                    <div class="time-slot occupied" onclick="openActivityModal('${dia}', '${bloque.horaInicio}')" 
+                         style="top: ${top}px; height: ${height}px;">
+                        <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
+                        <span class="slot-type">${bloque.tipo}</span>
+                        <span class="slot-desc">${bloque.desc}</span>
                     </div>
                 `;
             }
@@ -122,12 +127,83 @@ function renderizarCalendario() {
     container.innerHTML = html;
 }
 
-function estaDiaBloqueado(dia) {
-    const horasOcupadas = horas.filter(hora => {
+function obtenerReservasOrdenadas(dia) {
+    const reservas = [];
+    
+    horas.forEach(hora => {
         const key = `${estado.pistaActiva}_${dia}_${hora}`;
-        return estado.horarios[key];
+        if (estado.horarios[key]) {
+            reservas.push({
+                horaInicio: estado.horarios[key].horaInicio,
+                horaFin: estado.horarios[key].horaFin,
+                tipo: estado.horarios[key].tipo,
+                desc: estado.horarios[key].desc
+            });
+        }
     });
-    return horasOcupadas.length === horas.length;
+    
+    // Ordenar por hora de inicio
+    reservas.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+    
+    return reservas;
+}
+
+function generarBloquesConHuecos(reservas) {
+    const bloques = [];
+    let horaActual = `${HORA_INICIO.toString().padStart(2, '0')}:00`;
+    
+    reservas.forEach(reserva => {
+        // Si hay hueco antes de esta reserva, añadirlo
+        if (reserva.horaInicio > horaActual) {
+            bloques.push({
+                tipo: 'free',
+                horaInicio: horaActual,
+                horaFin: reserva.horaInicio
+            });
+        }
+        
+        // Añadir la reserva
+        bloques.push({
+            tipo: reserva.tipo,
+            desc: reserva.desc,
+            horaInicio: reserva.horaInicio,
+            horaFin: reserva.horaFin
+        });
+        
+        // Actualizar hora actual
+        horaActual = reserva.horaFin;
+    });
+    
+    // Si queda tiempo hasta el final, añadir hueco libre
+    const horaFinDia = `${HORA_FIN.toString().padStart(2, '0')}:00`;
+    if (horaActual < horaFinDia) {
+        bloques.push({
+            tipo: 'free',
+            horaInicio: horaActual,
+            horaFin: horaFinDia
+        });
+    }
+    
+    return bloques;
+}
+
+function calcularPosicionTop(hora) {
+    const [h, m] = hora.split(':').map(Number);
+    const minutosDesdeInicio = (h - HORA_INICIO) * 60 + m;
+    const minutosTotales = (HORA_FIN - HORA_INICIO) * 60;
+    return (minutosDesdeInicio / minutosTotales) * ALTURA_DIA;
+}
+
+function calcularAlturaBloque(horaInicio, horaFin) {
+    const [h1, m1] = horaInicio.split(':').map(Number);
+    const [h2, m2] = horaFin.split(':').map(Number);
+    
+    const minutosInicio = (h1 - HORA_INICIO) * 60 + m1;
+    const minutosFin = (h2 - HORA_INICIO) * 60 + m2;
+    const duracionMinutos = minutosFin - minutosInicio;
+    
+    const minutosTotales = (HORA_FIN - HORA_INICIO) * 60;
+    return (duracionMinutos / minutosTotales) * ALTURA_DIA;
 }
 
 // ==================== MODALES ====================
@@ -159,11 +235,7 @@ function createCourt() {
 }
 
 function openActivityModal(dia, hora) {
-    if (estaDiaBloqueado(dia)) return;
-    
     estado.currentSlot = { dia, hora };
-    
-    // Ocultar errores previos
     hideError('activityModal');
 
     document.getElementById('activityDay').value = dia;
@@ -196,7 +268,6 @@ function closeActivityModal() {
 }
 
 function showError(modalId, msg) {
-    // Crear o mostrar elemento de error dentro del modal
     const modal = document.getElementById(modalId);
     let errorEl = modal.querySelector('.error-message');
     if (!errorEl) {
@@ -237,7 +308,6 @@ function saveActivity() {
         return;
     }
     
-    // Guardar en la hora de inicio
     const key = `${estado.pistaActiva}_${estado.currentSlot.dia}_${horaInicio}`;
     estado.horarios[key] = { 
         tipo, 
@@ -252,7 +322,6 @@ function saveActivity() {
 }
 
 function clearSlot() {
-    // Confirmación personalizada antes de borrar
     if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
         const key = `${estado.pistaActiva}_${estado.currentSlot.dia}_${estado.currentSlot.hora}`;
         delete estado.horarios[key];

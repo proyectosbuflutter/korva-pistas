@@ -29,7 +29,7 @@ body {
 .nav-left {
     display: flex;
     align-items: center;
-    flex-grow: 1; /* Ocupa el espacio para poder centrar */
+    flex-grow: 1;
 }
 
 .nav-home-link {
@@ -43,11 +43,11 @@ body {
 .nav-title {
     font-weight: 700;
     color: #1e293b;
-    font-size: 1.2rem; /* Más grande como pediste */
+    font-size: 1.2rem;
     letter-spacing: 0.5px;
-    flex-grow: 1; /* Empuja el contenido hacia el centro */
+    flex-grow: 1;
     text-align: center;
-    margin-right: 100px; /* Compensa visualmente si es necesario */
+    margin-right: 100px;
 }
 
 .nav-right {
@@ -79,7 +79,7 @@ body {
 /* CONTENIDO PRINCIPAL */
 .main-content {
     flex: 1;
-    padding: 40px 20px;
+    padding: 40px 20px 100px; /* 100px abajo para el footer fijo */
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
@@ -174,27 +174,30 @@ body {
 .day-column {
     display: flex;
     flex-direction: column;
-    position: relative;
-    background: #f8fafc; /* Fondo suave para toda la columna */
+    background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 10px;
-    border: 1px solid #f1f5f9;
+    overflow: hidden;
 }
 
 .day-header {
     text-align: center;
-    padding: 8px;
-    border-radius: 6px;
+    padding: 12px;
+    background: #f1f5f9;
     font-weight: 600;
     color: #475569;
     font-size: 0.9rem;
-    margin-bottom: 10px; /* Espacio controlado */
+    height: 60px; /* Altura fija del header */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .day-header.today {
     background: #3b82f6;
     color: white;
-    margin-bottom: 10px;
 }
 
 .day-header .date {
@@ -206,13 +209,17 @@ body {
 }
 
 .time-slots {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    position: relative;
+    min-height: 500px; /* Altura mínima para que se vea bien */
 }
 
 .time-slot {
-    padding: 6px 4px;
+    position: absolute;
+    left: 8px;
+    right: 8px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 4px;
@@ -224,12 +231,14 @@ body {
     align-items: center;
     justify-content: center;
     gap: 2px;
-    min-height: 55px;
+    padding: 4px;
 }
 
 .time-slot:hover {
     background: #f0f9ff;
     border-color: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
 }
 
 .time-slot.occupied {
@@ -238,21 +247,27 @@ body {
     border-left: 3px solid #3b82f6;
 }
 
+.time-slot.free {
+    background: #f8fafc;
+    border-color: #f1f5f9;
+    border-style: dashed;
+}
+
 .time-slot .slot-time {
     font-weight: 600;
     color: #1e293b;
-    font-size: 0.75rem; /* Un punto más pequeño */
+    font-size: 0.75rem;
 }
 
 .time-slot .slot-type {
     font-size: 0.65rem;
     color: #3b82f6;
     font-weight: 600;
-    text-transform: lowercase; /* Forzar minúsculas */
+    text-transform: lowercase;
 }
 
 .time-slot .slot-desc {
-    font-size: 0.75rem; /* 1px más grande que antes (0.65 -> 0.75) */
+    font-size: 0.75rem;
     color: #64748b;
     line-height: 1.2;
 }
@@ -262,6 +277,22 @@ body {
     border-color: #cbd5e1;
     cursor: not-allowed;
     opacity: 0.6;
+}
+
+/* FOOTER FIJO */
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    padding: 15px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    z-index: 50;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
 }
 
 /* MODALES */
@@ -295,6 +326,10 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     transform: scale(0.95);
     transition: transform 0.3s;
+}
+
+.modal-large {
+    max-width: 600px;
 }
 
 .modal-overlay.active .modal {
@@ -340,7 +375,6 @@ body {
     margin-bottom: 16px;
 }
 
-/* Mensaje de error elegante */
 .error-message {
     color: #ef4444;
     font-size: 0.85rem;
