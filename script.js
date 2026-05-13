@@ -6,11 +6,8 @@ const horas = [
     '19:00', '20:00', '21:00', '22:00', '23:00'
 ];
 
-// Estado de la aplicación
 let estado = {
-    pistas: [
-        { id: 1, nombre: 'Pista 1' }
-    ],
+    pistas: [{ id: 1, nombre: 'Pista 1' }],
     pistaActiva: 1,
     horarios: {},
     courtToDelete: null,
@@ -20,7 +17,6 @@ let estado = {
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener('DOMContentLoaded', () => {
     cargarEstado();
-    
     if (document.getElementById('tabsList')) {
         renderizarTabs();
         renderizarCalendario();
@@ -30,8 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function cargarEstado() {
     const guardado = localStorage.getItem('korva_pistas');
     if (guardado) {
-        const datos = JSON.parse(guardado);
-        estado = { ...estado, ...datos };
+        estado = { ...estado, ...JSON.parse(guardado) };
     }
 }
 
@@ -39,17 +34,12 @@ function guardarEstado() {
     localStorage.setItem('korva_pistas', JSON.stringify(estado));
 }
 
-// Obtener fecha actual formateada
 function getFechaHoy() {
     const hoy = new Date();
-    const dia = hoy.getDate().toString().padStart(2, '0');
-    const mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
-    return `${dia}/${mes}`;
+    return `${hoy.getDate().toString().padStart(2, '0')}/${(hoy.getMonth() + 1).toString().padStart(2, '0')}`;
 }
 
 function getDiaSemanaIndex() {
-    // 0 = Domingo, 1 = Lunes... en JS
-    // Queremos 0 = Lunes, 6 = Domingo
     const dia = new Date().getDay();
     return dia === 0 ? 6 : dia - 1;
 }
@@ -64,7 +54,7 @@ function renderizarTabs() {
         tab.className = `tab ${pista.id === estado.pistaActiva ? 'active' : ''}`;
         tab.innerHTML = `
             <span onclick="activarPista(${pista.id})">${pista.nombre}</span>
-            <span class="tab-delete" onclick="openDeleteModal(${pista.id})" title="Eliminar">×</span>
+            <span class="tab-delete" onclick="openDeleteModal(${pista.id})">×</span>
         `;
         tabsList.appendChild(tab);
     });
@@ -91,9 +81,10 @@ function renderizarCalendario() {
         const esHoy = index === diaHoyIndex;
         const claseHoy = esHoy ? 'today' : '';
         const fechaMostrar = esHoy ? fechaHoy : '';
+        const diaBloqueado = estaDiaBloqueado(dia);
         
         html += `
-            <div class="day-column">
+            <div class="day-column ${diaBloqueado ? 'blocked' : ''}">
                 <div class="day-header ${claseHoy}">
                     ${dia}
                     ${fechaMostrar ? `<span class="date">${fechaMostrar}</span>` : ''}
@@ -108,16 +99,17 @@ function renderizarCalendario() {
             if (actividad) {
                 html += `
                     <div class="time-slot occupied" onclick="openActivityModal('${dia}', '${hora}')">
-                        <span class="slot-time">${hora}</span>
+                        <span class="slot-time">${actividad.horaInicio} - ${actividad.horaFin}</span>
                         <span class="slot-type">${actividad.tipo}</span>
                         <span class="slot-desc">${actividad.desc}</span>
                     </div>
                 `;
             } else {
                 html += `
-                    <div class="time-slot empty" onclick="openActivityModal('${dia}', '${hora}')">
+                    <div class="time-slot ${diaBloqueado ? 'blocked' : ''}" 
+                         onclick="${diaBloqueado ? '' : `openActivityModal('${dia}', '${hora}')`}">
                         <span class="slot-time">${hora}</span>
-                        <span style="color: #cbd5e1; font-size: 0.8rem;">Libre</span>
+                        <span style="color: #cbd5e1; font-size: 0.7rem;">${diaBloqueado ? '---' : 'Libre'}</span>
                     </div>
                 `;
             }
@@ -130,7 +122,16 @@ function renderizarCalendario() {
     container.innerHTML = html;
 }
 
-// ==================== MODAL AÑADIR PISTA ====================
+// Verificar si un día está completo (todas las horas ocupadas)
+function estaDiaBloqueado(dia) {
+    const horasOcupadas = horas.filter(hora => {
+        const key = `${estado.pistaActiva}_${dia}_${hora}`;
+        return estado.horarios[key];
+    });
+    return horasOcupadas.length === horas.length;
+}
+
+// ==================== MODALES ====================
 function openAddCourtModal() {
     document.getElementById('addCourtModal').classList.add('active');
     document.getElementById('courtName').focus();
@@ -143,14 +144,13 @@ function closeAddCourtModal() {
 
 function createCourt() {
     const nombre = document.getElementById('courtName').value.trim();
-    
     if (!nombre) {
-        alert('Introduce un nombre para la pista');
+        alert('Introduce un nombre');
         return;
     }
     
     const nuevoId = Math.max(...estado.pistas.map(p => p.id), 0) + 1;
-    estado.pistas.push({ id: nuevoId, nombre: nombre });
+    estado.pistas.push({ id: nuevoId, nombre });
     estado.pistaActiva = nuevoId;
     
     guardarEstado();
@@ -159,16 +159,25 @@ function createCourt() {
     closeAddCourtModal();
 }
 
-// ==================== MODAL ACTIVIDAD ====================
 function openActivityModal(dia, hora) {
+    if (estaDiaBloqueado(dia)) return;
+    
     estado.currentSlot = { dia, hora };
     
-    document.getElementById('activityTime').value = hora;
+    document.getElementById('activityDay').value = dia;
+    document.getElementById('activityTimeStart').value = hora;
+    
+    // Calcular hora fin (1 hora después por defecto)
+    const horaNum = parseInt(hora);
+    const horaFin = `${(horaNum + 1).toString().padStart(2, '0')}:00`;
+    document.getElementById('activityTimeEnd').value = horaFin;
     
     const key = `${estado.pistaActiva}_${dia}_${hora}`;
     const actividad = estado.horarios[key];
     
     if (actividad) {
+        document.getElementById('activityTimeStart').value = actividad.horaInicio;
+        document.getElementById('activityTimeEnd').value = actividad.horaFin;
         document.getElementById('activityType').value = actividad.tipo;
         document.getElementById('activityDesc').value = actividad.desc;
     } else {
@@ -185,12 +194,13 @@ function closeActivityModal() {
 }
 
 function saveActivity() {
-    const hora = document.getElementById('activityTime').value;
+    const horaInicio = document.getElementById('activityTimeStart').value;
+    const horaFin = document.getElementById('activityTimeEnd').value;
     const tipo = document.getElementById('activityType').value;
     const desc = document.getElementById('activityDesc').value.trim();
     
-    if (!hora) {
-        alert('Selecciona una hora válida');
+    if (!horaInicio || !horaFin) {
+        alert('Selecciona horas válidas');
         return;
     }
     
@@ -199,15 +209,19 @@ function saveActivity() {
         return;
     }
     
-    // Si cambió la hora, borrar la anterior y crear nueva
-    const oldKey = `${estado.pistaActiva}_${estado.currentSlot.dia}_${estado.currentSlot.hora}`;
-    const newKey = `${estado.pistaActiva}_${estado.currentSlot.dia}_${hora}`;
-    
-    if (oldKey !== newKey) {
-        delete estado.horarios[oldKey];
+    if (horaInicio >= horaFin) {
+        alert('La hora de fin debe ser posterior a la de inicio');
+        return;
     }
     
-    estado.horarios[newKey] = { tipo, desc };
+    // Guardar en la hora de inicio
+    const key = `${estado.pistaActiva}_${estado.currentSlot.dia}_${horaInicio}`;
+    estado.horarios[key] = { 
+        tipo, 
+        desc, 
+        horaInicio, 
+        horaFin 
+    };
     
     guardarEstado();
     renderizarCalendario();
@@ -223,7 +237,6 @@ function clearSlot() {
     closeActivityModal();
 }
 
-// ==================== MODAL ELIMINAR ====================
 function openDeleteModal(pistaId) {
     estado.courtToDelete = pistaId;
     const pista = estado.pistas.find(p => p.id === pistaId);
@@ -257,7 +270,6 @@ function confirmDeleteCourt() {
     closeDeleteModal();
 }
 
-// Cerrar modales con ESC
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeAddCourtModal();

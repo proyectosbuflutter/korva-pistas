@@ -12,11 +12,12 @@
     <nav class="navbar">
         <div class="nav-left">
             <a href="index.html" class="nav-link home">← Inicio</a>
+            <span class="nav-title">Gestión de Pistas</span>
         </div>
         <div class="nav-right">
             <a href="#" class="nav-link">Base de Datos</a>
             <a href="#" class="nav-link">⚙️ Configuración</a>
-            <a href="#" class="nav-link logout"> Salir</a>
+            <a href="#" class="nav-link logout">🚪 Salir</a>
         </div>
     </nav>
 
@@ -25,16 +26,12 @@
         
         <!-- TABS DE PISTAS -->
         <div class="tabs-container">
-            <div class="tabs-list" id="tabsList">
-                <!-- Las tabs se generan dinámicamente -->
-            </div>
+            <div class="tabs-list" id="tabsList"></div>
             <button class="btn-add-court" onclick="openAddCourtModal()">+ Añadir Pista</button>
         </div>
 
         <!-- CALENDARIO SEMANAL -->
-        <div class="weekly-schedule" id="weeklySchedule">
-            <!-- Se genera dinámicamente -->
-        </div>
+        <div class="weekly-schedule" id="weeklySchedule"></div>
 
     </main>
 
@@ -55,12 +52,22 @@
 
     <!-- MODAL ACTIVIDAD -->
     <div class="modal-overlay" id="activityModal">
-        <div class="modal">
+        <div class="modal modal-large">
             <h2>Asignar Actividad</h2>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Hora</label>
-                    <input type="time" id="activityTime" value="07:00">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Día</label>
+                        <input type="text" id="activityDay" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Hora Inicio</label>
+                        <input type="time" id="activityTimeStart" value="07:00">
+                    </div>
+                    <div class="form-group">
+                        <label>Hora Fin</label>
+                        <input type="time" id="activityTimeEnd" value="08:00">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Tipo</label>
@@ -78,8 +85,8 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeActivityModal()">Cancelar</button>
                 <button class="btn btn-danger" onclick="clearSlot()" style="margin-right: auto;">Limpiar</button>
+                <button class="btn btn-secondary" onclick="closeActivityModal()">Cancelar</button>
                 <button class="btn btn-primary" onclick="saveActivity()">Guardar</button>
             </div>
         </div>

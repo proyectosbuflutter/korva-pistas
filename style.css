@@ -26,10 +26,17 @@ body {
     z-index: 100;
 }
 
-.nav-left, .nav-right {
+.nav-left {
     display: flex;
     gap: 24px;
     align-items: center;
+}
+
+.nav-title {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
 }
 
 .nav-link {
@@ -292,23 +299,23 @@ footer {
 .day-column {
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .day-header {
     text-align: center;
-    padding: 14px;
+    padding: 12px;
     background: #f1f5f9;
-    border-radius: 8px 8px 0 0;
+    border-radius: 8px;
     font-weight: 600;
     color: #475569;
     font-size: 0.85rem;
-    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 12px;
 }
 
 .day-header.today {
     background: #3b82f6;
     color: white;
-    border-bottom-color: #2563eb;
 }
 
 .day-header .date {
@@ -326,26 +333,25 @@ footer {
 }
 
 .time-slot {
-    padding: 12px 8px;
+    padding: 8px 6px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 0 0 8px 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
     text-align: center;
-    min-height: 80px;
+    min-height: 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 2px;
 }
 
 .time-slot:hover {
     background: #f0f9ff;
     border-color: #3b82f6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-1px);
 }
 
 .time-slot.occupied {
@@ -355,21 +361,20 @@ footer {
 }
 
 .time-slot .slot-time {
-    font-weight: 700;
+    font-weight: 600;
     color: #1e293b;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 .time-slot .slot-type {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #3b82f6;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 .time-slot .slot-desc {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: #64748b;
     max-width: 100%;
     overflow: hidden;
@@ -377,9 +382,30 @@ footer {
     white-space: nowrap;
 }
 
-.time-slot.empty .slot-time {
-    color: #94a3b8;
-    font-weight: 400;
+.time-slot.blocked {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.day-column.blocked .time-slots {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.day-column.blocked::after {
+    content: "Día completo";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    z-index: 10;
 }
 
 /* MODALES */
@@ -413,6 +439,10 @@ footer {
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     transform: scale(0.95);
     transition: transform 0.3s;
+}
+
+.modal-large {
+    max-width: 600px;
 }
 
 .modal-overlay.active .modal {
@@ -453,14 +483,6 @@ footer {
     border-color: #3b82f6;
 }
 
-.modal-body .info-text {
-    background: #f1f5f9;
-    padding: 12px;
-    border-radius: 6px;
-    color: #475569;
-    font-weight: 500;
-}
-
 .modal-body .form-group {
     margin-bottom: 16px;
 }
@@ -469,6 +491,13 @@ footer {
     color: #ef4444;
     font-size: 0.9rem;
     margin-top: 12px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .modal-actions {
@@ -533,5 +562,9 @@ footer {
     
     .tabs-list {
         overflow-x: auto;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
     }
 }
