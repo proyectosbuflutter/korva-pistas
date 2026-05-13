@@ -4,6 +4,12 @@ const HORA_INICIO = 7; // 07:00
 const HORA_FIN = 23;   // 23:00
 const ALTURA_DIA = 500; // Altura en píxeles del área de horarios
 
+// Generar array de horas
+const horas = [];
+for (let h = HORA_INICIO; h < HORA_FIN; h++) {
+    horas.push(`${h.toString().padStart(2, '0')}:00`);
+}
+
 let estado = {
     pistas: [{ id: 1, nombre: 'Pista 1' }],
     pistaActiva: 1,
