@@ -1,0 +1,166 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #1e293b;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-bar {
+    background-color: #ffffff;
+    padding: 1rem 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.top-actions {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.action-link {
+    text-decoration: none;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.action-link:hover {
+    color: #0f172a;
+}
+
+.logout {
+    color: #ef4444;
+}
+
+.logout:hover {
+    color: #b91c1c;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 20px 40px;
+}
+
+.brand-section {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.brand-section h1 {
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: #1e293b;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.brand-section .subtitle {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin-top: 8px;
+    font-weight: 300;
+}
+
+.cards-container {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 40px 30px;
+    width: 200px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    border-color: #cbd5e1;
+}
+
+.card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.card-line {
+    width: 40px;
+    height: 1px;
+    background-color: #cbd5e1;
+    margin-bottom: 16px;
+}
+
+.card.premium .card-line.premium-line {
+    background-color: #d97706;
+    width: 50px;
+    height: 2px;
+}
+
+.badge {
+    background: #d97706;
+    color: white;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.card-desc {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 300;
+    line-height: 1.4;
+}
+
+.card.premium {
+    border: 1px solid #fcd34d;
+    background: #fffbeb;
+}
+
+.card.premium h3 {
+    color: #92400e;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    background: white;
+    margin-top: auto;
+}
