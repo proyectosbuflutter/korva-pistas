@@ -122,7 +122,6 @@ function renderizarCalendario() {
     container.innerHTML = html;
 }
 
-// Verificar si un día está completo (todas las horas ocupadas)
 function estaDiaBloqueado(dia) {
     const horasOcupadas = horas.filter(hora => {
         const key = `${estado.pistaActiva}_${dia}_${hora}`;
@@ -145,7 +144,7 @@ function closeAddCourtModal() {
 function createCourt() {
     const nombre = document.getElementById('courtName').value.trim();
     if (!nombre) {
-        alert('Introduce un nombre');
+        showError('addCourtModal', 'El nombre es obligatorio');
         return;
     }
     
@@ -164,11 +163,13 @@ function openActivityModal(dia, hora) {
     
     estado.currentSlot = { dia, hora };
     
+    // Ocultar errores previos
+    hideError('activityModal');
+
     document.getElementById('activityDay').value = dia;
     document.getElementById('activityTimeStart').value = hora;
     
-    // Calcular hora fin (1 hora después por defecto)
-    const horaNum = parseInt(hora);
+    const horaNum = parseInt(hora.split(':')[0]);
     const horaFin = `${(horaNum + 1).toString().padStart(2, '0')}:00`;
     document.getElementById('activityTimeEnd').value = horaFin;
     
@@ -191,6 +192,26 @@ function openActivityModal(dia, hora) {
 function closeActivityModal() {
     document.getElementById('activityModal').classList.remove('active');
     estado.currentSlot = null;
+    hideError('activityModal');
+}
+
+function showError(modalId, msg) {
+    // Crear o mostrar elemento de error dentro del modal
+    const modal = document.getElementById(modalId);
+    let errorEl = modal.querySelector('.error-message');
+    if (!errorEl) {
+        errorEl = document.createElement('div');
+        errorEl.className = 'error-message';
+        modal.querySelector('.modal-body').prepend(errorEl);
+    }
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+}
+
+function hideError(modalId) {
+    const modal = document.getElementById(modalId);
+    const errorEl = modal.querySelector('.error-message');
+    if (errorEl) errorEl.style.display = 'none';
 }
 
 function saveActivity() {
@@ -199,18 +220,20 @@ function saveActivity() {
     const tipo = document.getElementById('activityType').value;
     const desc = document.getElementById('activityDesc').value.trim();
     
+    hideError('activityModal');
+
     if (!horaInicio || !horaFin) {
-        alert('Selecciona horas válidas');
+        showError('activityModal', 'Selecciona horas válidas');
         return;
     }
     
     if (!desc) {
-        alert('Introduce una descripción');
+        showError('activityModal', 'Introduce una descripción');
         return;
     }
     
     if (horaInicio >= horaFin) {
-        alert('La hora de fin debe ser posterior a la de inicio');
+        showError('activityModal', 'La hora de fin debe ser posterior');
         return;
     }
     
@@ -229,12 +252,15 @@ function saveActivity() {
 }
 
 function clearSlot() {
-    const key = `${estado.pistaActiva}_${estado.currentSlot.dia}_${estado.currentSlot.hora}`;
-    delete estado.horarios[key];
-    
-    guardarEstado();
-    renderizarCalendario();
-    closeActivityModal();
+    // Confirmación personalizada antes de borrar
+    if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
+        const key = `${estado.pistaActiva}_${estado.currentSlot.dia}_${estado.currentSlot.hora}`;
+        delete estado.horarios[key];
+        
+        guardarEstado();
+        renderizarCalendario();
+        closeActivityModal();
+    }
 }
 
 function openDeleteModal(pistaId) {
