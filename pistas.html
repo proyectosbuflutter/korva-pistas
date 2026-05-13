@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pistas - KORVA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- NAVBAR COMÚN -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="nav-link home">← Inicio</a>
+        </div>
+        <div class="nav-right">
+            <a href="#" class="nav-link">Base de Datos</a>
+            <a href="#" class="nav-link">⚙️ Configuración</a>
+            <a href="#" class="nav-link logout">🚪 Salir</a>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO DE PISTAS -->
+    <main class="main-content pistas-page">
+        
+        <div class="page-header">
+            <h1>GESTIÓN DE PISTAS</h1>
+            <p>Padel y Pickleball</p>
+        </div>
+
+        <!-- TABS DE PISTAS -->
+        <div class="tabs-container">
+            <div class="tabs-list" id="tabsList">
+                <!-- Las tabs se generan dinámicamente -->
+            </div>
+            <button class="btn-add-court" onclick="openAddCourtModal()">+ Añadir Pista</button>
+        </div>
+
+        <!-- CALENDARIO SEMANAL -->
+        <div class="weekly-schedule" id="weeklySchedule">
+            <!-- Se genera dinámicamente -->
+        </div>
+
+    </main>
+
+    <!-- MODAL AÑADIR PISTA -->
+    <div class="modal-overlay" id="addCourtModal">
+        <div class="modal">
+            <h2>Nueva Pista</h2>
+            <div class="modal-body">
+                <label for="courtName">Nombre de la pista</label>
+                <input type="text" id="courtName" placeholder="Ej: Pista Central" autofocus>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeAddCourtModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="createCourt()">Crear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ACTIVIDAD -->
+    <div class="modal-overlay" id="activityModal">
+        <div class="modal">
+            <h2>Asignar Actividad</h2>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Día y Hora</label>
+                    <p id="activityDateTime" class="info-text"></p>
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="activityType">
+                        <option value="Partido">Partido</option>
+                        <option value="Entrenamiento">Entrenamiento</option>
+                        <option value="Clase">Clase</option>
+                        <option value="Reservado">Reservado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" id="activityDesc" placeholder="Ej: Juan vs María">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeActivityModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveActivity()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMAR ELIMINAR -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <h2>Eliminar Pista</h2>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar <strong id="deleteCourtName"></strong>?</p>
+                <p class="warning">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmDeleteCourt()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER COMÚN -->
+    <footer>
+        <p>UNIVERSO KORVA — Gestión de instalaciones y torneos · contacto@korva.com · © 2026</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
