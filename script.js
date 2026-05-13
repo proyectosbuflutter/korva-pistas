@@ -12,7 +12,7 @@ let estado = {
         { id: 1, nombre: 'Pista 1' }
     ],
     pistaActiva: 1,
-    horarios: {}, // Formato: { "pistaId_dia_hora": { tipo: '', desc: '' } }
+    horarios: {},
     courtToDelete: null,
     currentSlot: null
 };
@@ -21,14 +21,12 @@ let estado = {
 document.addEventListener('DOMContentLoaded', () => {
     cargarEstado();
     
-    // Si estamos en la página de pistas
     if (document.getElementById('tabsList')) {
         renderizarTabs();
         renderizarCalendario();
     }
 });
 
-// Cargar desde localStorage
 function cargarEstado() {
     const guardado = localStorage.getItem('korva_pistas');
     if (guardado) {
@@ -37,9 +35,23 @@ function cargarEstado() {
     }
 }
 
-// Guardar en localStorage
 function guardarEstado() {
     localStorage.setItem('korva_pistas', JSON.stringify(estado));
+}
+
+// Obtener fecha actual formateada
+function getFechaHoy() {
+    const hoy = new Date();
+    const dia = hoy.getDate().toString().padStart(2, '0');
+    const mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
+    return `${dia}/${mes}`;
+}
+
+function getDiaSemanaIndex() {
+    // 0 = Domingo, 1 = Lunes... en JS
+    // Queremos 0 = Lunes, 6 = Domingo
+    const dia = new Date().getDay();
+    return dia === 0 ? 6 : dia - 1;
 }
 
 // ==================== TABS ====================
@@ -70,26 +82,45 @@ function renderizarCalendario() {
     const container = document.getElementById('weeklySchedule');
     if (!container) return;
     
+    const diaHoyIndex = getDiaSemanaIndex();
+    const fechaHoy = getFechaHoy();
+    
     let html = '<div class="week-grid">';
     
-    diasSemana.forEach(dia => {
+    diasSemana.forEach((dia, index) => {
+        const esHoy = index === diaHoyIndex;
+        const claseHoy = esHoy ? 'today' : '';
+        const fechaMostrar = esHoy ? fechaHoy : '';
+        
         html += `
             <div class="day-column">
-                <div class="day-header">${dia}</div>
+                <div class="day-header ${claseHoy}">
+                    ${dia}
+                    ${fechaMostrar ? `<span class="date">${fechaMostrar}</span>` : ''}
+                </div>
                 <div class="time-slots">
         `;
         
         horas.forEach(hora => {
             const key = `${estado.pistaActiva}_${dia}_${hora}`;
             const actividad = estado.horarios[key];
-            const contenido = actividad ? `${actividad.tipo}: ${actividad.desc}` : 'Libre';
-            const claseOcupado = actividad ? 'occupied' : '';
             
-            html += `
-                <div class="time-slot ${claseOcupado}" onclick="openActivityModal('${dia}', '${hora}')">
-                    ${contenido}
-                </div>
-            `;
+            if (actividad) {
+                html += `
+                    <div class="time-slot occupied" onclick="openActivityModal('${dia}', '${hora}')">
+                        <span class="slot-time">${hora}</span>
+                        <span class="slot-type">${actividad.tipo}</span>
+                        <span class="slot-desc">${actividad.desc}</span>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="time-slot empty" onclick="openActivityModal('${dia}', '${hora}')">
+                        <span class="slot-time">${hora}</span>
+                        <span style="color: #cbd5e1; font-size: 0.8rem;">Libre</span>
+                    </div>
+                `;
+            }
         });
         
         html += '</div></div>';
@@ -132,7 +163,7 @@ function createCourt() {
 function openActivityModal(dia, hora) {
     estado.currentSlot = { dia, hora };
     
-    document.getElementById('activityDateTime').textContent = `${dia} a las ${hora}`;
+    document.getElementById('activityTime').value = hora;
     
     const key = `${estado.pistaActiva}_${dia}_${hora}`;
     const actividad = estado.horarios[key];
@@ -154,16 +185,38 @@ function closeActivityModal() {
 }
 
 function saveActivity() {
+    const hora = document.getElementById('activityTime').value;
     const tipo = document.getElementById('activityType').value;
     const desc = document.getElementById('activityDesc').value.trim();
+    
+    if (!hora) {
+        alert('Selecciona una hora válida');
+        return;
+    }
     
     if (!desc) {
         alert('Introduce una descripción');
         return;
     }
     
+    // Si cambió la hora, borrar la anterior y crear nueva
+    const oldKey = `${estado.pistaActiva}_${estado.currentSlot.dia}_${estado.currentSlot.hora}`;
+    const newKey = `${estado.pistaActiva}_${estado.currentSlot.dia}_${hora}`;
+    
+    if (oldKey !== newKey) {
+        delete estado.horarios[oldKey];
+    }
+    
+    estado.horarios[newKey] = { tipo, desc };
+    
+    guardarEstado();
+    renderizarCalendario();
+    closeActivityModal();
+}
+
+function clearSlot() {
     const key = `${estado.pistaActiva}_${estado.currentSlot.dia}_${estado.currentSlot.hora}`;
-    estado.horarios[key] = { tipo, desc };
+    delete estado.horarios[key];
     
     guardarEstado();
     renderizarCalendario();
@@ -186,15 +239,12 @@ function closeDeleteModal() {
 function confirmDeleteCourt() {
     if (!estado.courtToDelete) return;
     
-    // Eliminar pista
     estado.pistas = estado.pistas.filter(p => p.id !== estado.courtToDelete);
     
-    // Si era la activa, activar la primera disponible
     if (estado.pistaActiva === estado.courtToDelete) {
         estado.pistaActiva = estado.pistas.length > 0 ? estado.pistas[0].id : null;
     }
     
-    // Limpiar horarios de esa pista
     Object.keys(estado.horarios).forEach(key => {
         if (key.startsWith(`${estado.courtToDelete}_`)) {
             delete estado.horarios[key];

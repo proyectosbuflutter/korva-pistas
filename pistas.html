@@ -16,18 +16,13 @@
         <div class="nav-right">
             <a href="#" class="nav-link">Base de Datos</a>
             <a href="#" class="nav-link">⚙️ Configuración</a>
-            <a href="#" class="nav-link logout">🚪 Salir</a>
+            <a href="#" class="nav-link logout"> Salir</a>
         </div>
     </nav>
 
     <!-- CONTENIDO DE PISTAS -->
     <main class="main-content pistas-page">
         
-        <div class="page-header">
-            <h1>GESTIÓN DE PISTAS</h1>
-            <p>Padel y Pickleball</p>
-        </div>
-
         <!-- TABS DE PISTAS -->
         <div class="tabs-container">
             <div class="tabs-list" id="tabsList">
@@ -64,8 +59,8 @@
             <h2>Asignar Actividad</h2>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Día y Hora</label>
-                    <p id="activityDateTime" class="info-text"></p>
+                    <label>Hora</label>
+                    <input type="time" id="activityTime" value="07:00">
                 </div>
                 <div class="form-group">
                     <label>Tipo</label>
@@ -74,6 +69,7 @@
                         <option value="Entrenamiento">Entrenamiento</option>
                         <option value="Clase">Clase</option>
                         <option value="Reservado">Reservado</option>
+                        <option value="Mantenimiento">Mantenimiento</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -83,6 +79,7 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeActivityModal()">Cancelar</button>
+                <button class="btn btn-danger" onclick="clearSlot()" style="margin-right: auto;">Limpiar</button>
                 <button class="btn btn-primary" onclick="saveActivity()">Guardar</button>
             </div>
         </div>
@@ -105,7 +102,7 @@
 
     <!-- FOOTER COMÚN -->
     <footer>
-        <p>UNIVERSO KORVA — Gestión de instalaciones y torneos · contacto@korva.com · © 2026</p>
+        <p>Gestión de Pistas · UNIVERSO KORVA — contacto@korva.com · © 2026</p>
     </footer>
 
     <script src="script.js"></script>
