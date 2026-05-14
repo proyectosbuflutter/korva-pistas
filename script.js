@@ -2,9 +2,8 @@
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const HORA_INICIO = 7;
 const HORA_FIN = 23;
-const PIXELS_POR_HORA = 50; // 1 hora = 50px de alto visual
+const PIXELS_POR_HORA = 50;
 
-// Generar array de horas base
 const horasBase = [];
 for (let h = HORA_INICIO; h < HORA_FIN; h++) {
     horasBase.push(`${h.toString().padStart(2, '0')}:00`);
@@ -38,14 +37,39 @@ function guardarEstado() {
     localStorage.setItem('korva_pistas', JSON.stringify(estado));
 }
 
-function getFechaHoy() {
+// ==================== FECHAS ====================
+function getFechasSemana() {
     const hoy = new Date();
-    return `${hoy.getDate().toString().padStart(2, '0')}/${(hoy.getMonth() + 1).toString().padStart(2, '0')}`;
+    const diaSemanaHoy = hoy.getDay(); // 0=Dom, 1=Lun...
+    const offsetLunes = diaSemanaHoy === 0 ? -6 : 1 - diaSemanaHoy;
+    
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() + offsetLunes);
+    
+    const fechas = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(lunes);
+        d.setDate(lunes.getDate() + i);
+        fechas.push(d);
+    }
+    return fechas;
 }
 
-function getDiaSemanaIndex() {
-    const dia = new Date().getDay();
-    return dia === 0 ? 6 : dia - 1;
+function formatFecha(date) {
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+}
+
+function esPasado(date) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d < hoy;
+}
+
+function esHoy(date) {
+    const hoy = new Date();
+    return formatFecha(date) === formatFecha(hoy);
 }
 
 // ==================== TABS ====================
@@ -71,62 +95,60 @@ function activarPista(id) {
     renderizarCalendario();
 }
 
-// ==================== CALENDARIO CRONOLÓGICO LIMPIO ====================
+// ==================== CALENDARIO ====================
 function renderizarCalendario() {
     const container = document.getElementById('weeklySchedule');
     if (!container) return;
     
-    const diaHoyIndex = getDiaSemanaIndex();
-    const fechaHoy = getFechaHoy();
+    const fechasSemana = getFechasSemana();
     
     let html = '<div class="week-grid">';
     
     diasSemana.forEach((dia, index) => {
-        const esHoy = index === diaHoyIndex;
-        const claseHoy = esHoy ? 'today' : '';
-        const fechaMostrar = esHoy ? fechaHoy : '';
+        const fechaObj = fechasSemana[index];
+        const hoy = esHoy(fechaObj);
+        const pasado = esPasado(fechaObj);
         
-        // Obtener reservas únicas y ordenadas cronológicamente
+        let claseHeader = '';
+        if (hoy) claseHeader = 'today';
+        else if (pasado) claseHeader = 'past';
+        
         const reservas = obtenerReservasUnicas(dia);
         
         html += `
             <div class="day-column">
-                <div class="day-header ${claseHoy}">
+                <div class="day-header ${claseHeader}">
                     ${dia}
-                    ${fechaMostrar ? `<span class="date">${fechaMostrar}</span>` : ''}
+                    <span class="date">${formatFecha(fechaObj)}</span>
                 </div>
                 <div class="time-slots">
         `;
         
         if (reservas.length === 0) {
-            // Día completamente libre
             html += `
-                <div class="time-slot free" onclick="openActivityModal('${dia}', '${HORA_INICIO}:00')" 
+                <div class="time-slot free" onclick="openActivityModal('${dia}', '${HORA_INICIO.toString().padStart(2,'0')}:00', ${pasado})" 
                      style="height: 100%; min-height: 200px; cursor: pointer;">
                     <span class="slot-time">${HORA_INICIO}:00 - ${HORA_FIN}:00</span>
                     <span class="slot-label">Libre (click para añadir)</span>
                 </div>
             `;
         } else {
-            // Generar lista cronológica completa (alternando libres y ocupados)
             const bloquesCronologicos = generarListaCronologica(reservas);
             
             bloquesCronologicos.forEach(bloque => {
                 const alturaPx = calcularAlturaEnPx(bloque.horaInicio, bloque.horaFin);
                 
                 if (bloque.tipo === 'free') {
-                    // Pastilla libre
                     html += `
-                        <div class="time-slot free" onclick="openActivityModal('${dia}', '${bloque.horaInicio}')" 
+                        <div class="time-slot free" onclick="openActivityModal('${dia}', '${bloque.horaInicio}', ${pasado})" 
                              style="height: ${alturaPx}px; cursor: pointer;">
                             <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
                             <span class="slot-label">Libre</span>
                         </div>
                     `;
                 } else {
-                    // Pastilla ocupada
                     html += `
-                        <div class="time-slot occupied" onclick="openActivityModal('${dia}', '${bloque.horaInicio}')" 
+                        <div class="time-slot occupied" onclick="openActivityModal('${dia}', '${bloque.horaInicio}', ${pasado})" 
                              style="height: ${alturaPx}px;">
                             <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
                             <span class="slot-type">${bloque.tipo}</span>
@@ -147,14 +169,12 @@ function renderizarCalendario() {
 function obtenerReservasUnicas(dia) {
     const reservasMap = new Map();
     
-    // Recorrer todas las horas posibles para encontrar reservas
     for (let h = HORA_INICIO; h < HORA_FIN; h++) {
         const horaKey = `${h.toString().padStart(2, '0')}:00`;
         const storageKey = `${estado.pistaActiva}_${dia}_${horaKey}`;
         
         if (estado.horarios[storageKey]) {
             const reserva = estado.horarios[storageKey];
-            // Usar horaInicio como clave para evitar duplicados
             if (!reservasMap.has(reserva.horaInicio)) {
                 reservasMap.set(reserva.horaInicio, {
                     horaInicio: reserva.horaInicio,
@@ -166,10 +186,8 @@ function obtenerReservasUnicas(dia) {
         }
     }
     
-    // Convertir a array y ordenar cronológicamente
     const reservas = Array.from(reservasMap.values());
     reservas.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
-    
     return reservas;
 }
 
@@ -178,52 +196,25 @@ function generarListaCronologica(reservas) {
     let horaActual = `${HORA_INICIO.toString().padStart(2, '0')}:00`;
     const horaFinDia = `${HORA_FIN.toString().padStart(2, '0')}:00`;
     
-    // Recorrer cada reserva y rellenar huecos libres entre ellas
     reservas.forEach(reserva => {
-        // Si hay un hueco libre antes de esta reserva, añadirlo
         if (reserva.horaInicio > horaActual) {
-            listaCompleta.push({
-                tipo: 'free',
-                horaInicio: horaActual,
-                horaFin: reserva.horaInicio
-            });
+            listaCompleta.push({ tipo: 'free', horaInicio: horaActual, horaFin: reserva.horaInicio });
         }
-        
-        // Añadir la reserva
-        listaCompleta.push({
-            tipo: reserva.tipo,
-            desc: reserva.desc,
-            horaInicio: reserva.horaInicio,
-            horaFin: reserva.horaFin
-        });
-        
-        // Actualizar hora actual al final de esta reserva
+        listaCompleta.push({ tipo: reserva.tipo, desc: reserva.desc, horaInicio: reserva.horaInicio, horaFin: reserva.horaFin });
         horaActual = reserva.horaFin;
     });
     
-    // Si queda tiempo hasta el final del día, añadir hueco libre final
     if (horaActual < horaFinDia) {
-        listaCompleta.push({
-            tipo: 'free',
-            horaInicio: horaActual,
-            horaFin: horaFinDia
-        });
+        listaCompleta.push({ tipo: 'free', horaInicio: horaActual, horaFin: horaFinDia });
     }
     
     return listaCompleta;
 }
 
-// Calcula altura en píxeles: 1 hora = 50px
 function calcularAlturaEnPx(horaInicio, horaFin) {
     const [h1, m1] = horaInicio.split(':').map(Number);
     const [h2, m2] = horaFin.split(':').map(Number);
-    
-    // Calcular duración en horas decimales
-    const horaInicioDecimal = h1 + (m1 / 60);
-    const horaFinDecimal = h2 + (m2 / 60);
-    const duracionHoras = horaFinDecimal - horaInicioDecimal;
-    
-    // Convertir a píxeles (mínimo 35px para que se vea algo)
+    const duracionHoras = (h2 + m2 / 60) - (h1 + m1 / 60);
     return Math.max(duracionHoras * PIXELS_POR_HORA, 35);
 }
 
@@ -255,14 +246,18 @@ function createCourt() {
     closeAddCourtModal();
 }
 
-function openActivityModal(dia, hora) {
+function openActivityModal(dia, hora, esDiaPasado) {
+    if (esDiaPasado) {
+        openPastDayModal();
+        return;
+    }
+
     estado.currentSlot = { dia, hora };
     hideError('activityModal');
 
     document.getElementById('activityDay').value = dia;
     document.getElementById('activityTimeStart').value = hora;
     
-    // Buscar si ya existe una reserva en esa hora para cargar sus datos
     const key = `${estado.pistaActiva}_${dia}_${hora}`;
     const actividad = estado.horarios[key];
     
@@ -272,7 +267,6 @@ function openActivityModal(dia, hora) {
         document.getElementById('activityType').value = actividad.tipo;
         document.getElementById('activityDesc').value = actividad.desc;
     } else {
-        // Por defecto, 1 hora de duración
         const horaNum = parseInt(hora.split(':')[0]);
         const horaFin = `${(horaNum + 1).toString().padStart(2, '0')}:00`;
         document.getElementById('activityTimeEnd').value = horaFin;
@@ -287,6 +281,24 @@ function closeActivityModal() {
     document.getElementById('activityModal').classList.remove('active');
     estado.currentSlot = null;
     hideError('activityModal');
+}
+
+// Modal días pasados
+function openPastDayModal() {
+    document.getElementById('pastDayModal').classList.add('active');
+}
+
+function closePastDayModal() {
+    document.getElementById('pastDayModal').classList.remove('active');
+}
+
+// Modal confirmar limpiar
+function openClearConfirmModal() {
+    document.getElementById('clearConfirmModal').classList.add('active');
+}
+
+function closeClearConfirmModal() {
+    document.getElementById('clearConfirmModal').classList.remove('active');
 }
 
 function showError(modalId, msg) {
@@ -319,25 +331,17 @@ function saveActivity() {
         showError('activityModal', 'Selecciona horas válidas');
         return;
     }
-    
     if (!desc) {
         showError('activityModal', 'Introduce una descripción');
         return;
     }
-    
     if (horaInicio >= horaFin) {
         showError('activityModal', 'La hora de fin debe ser posterior');
         return;
     }
     
-    // Guardar usando horaInicio como clave única
     const key = `${estado.pistaActiva}_${estado.currentSlot.dia}_${horaInicio}`;
-    estado.horarios[key] = { 
-        tipo, 
-        desc, 
-        horaInicio, 
-        horaFin 
-    };
+    estado.horarios[key] = { tipo, desc, horaInicio, horaFin };
     
     guardarEstado();
     renderizarCalendario();
@@ -345,21 +349,27 @@ function saveActivity() {
 }
 
 function clearSlot() {
-    if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
-        // Eliminar todas las claves que coincidan con ese día y hora inicial
-        Object.keys(estado.horarios).forEach(key => {
-            const [pistaId, dia, hora] = key.split('_');
-            if (parseInt(pistaId) === estado.pistaActiva && 
-                dia === estado.currentSlot.dia && 
-                hora === estado.currentSlot.hora) {
-                delete estado.horarios[key];
-            }
-        });
-        
-        guardarEstado();
-        renderizarCalendario();
-        closeActivityModal();
-    }
+    closeActivityModal();
+    openClearConfirmModal();
+}
+
+function confirmClearSlot() {
+    Object.keys(estado.horarios).forEach(key => {
+        const partes = key.split('_');
+        const pistaId = parseInt(partes[0]);
+        const dia = partes[1];
+        const hora = partes[2];
+        if (pistaId === estado.pistaActiva && 
+            dia === estado.currentSlot.dia && 
+            hora === estado.currentSlot.hora) {
+            delete estado.horarios[key];
+        }
+    });
+    
+    guardarEstado();
+    renderizarCalendario();
+    closeClearConfirmModal();
+    estado.currentSlot = null;
 }
 
 function openDeleteModal(pistaId) {
@@ -400,5 +410,7 @@ document.addEventListener('keydown', (e) => {
         closeAddCourtModal();
         closeActivityModal();
         closeDeleteModal();
+        closePastDayModal();
+        closeClearConfirmModal();
     }
 });

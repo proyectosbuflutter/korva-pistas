@@ -448,6 +448,11 @@ footer {
     transform: translateY(-1px);
 }
 
+.day-header.past {
+    background: #f1f5f9;
+    color: #b0bec5;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .week-grid {

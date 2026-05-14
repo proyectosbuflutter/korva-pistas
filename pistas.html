@@ -105,6 +105,34 @@
         <p>Gestión de Pistas · UNIVERSO KORVA — contacto@korva.com · © 2026</p>
     </footer>
 
+    <!-- MODAL DÍA PASADO -->
+    <div class="modal-overlay" id="pastDayModal">
+        <div class="modal">
+            <h2>Día no editable</h2>
+            <div class="modal-body">
+                <p>No se pueden editar días pasados.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closePastDayModal()">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMAR LIMPIAR -->
+    <div class="modal-overlay" id="clearConfirmModal">
+        <div class="modal">
+            <h2>Eliminar actividad</h2>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar esta actividad?</p>
+                <p class="warning">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeClearConfirmModal()">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmClearSlot()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
