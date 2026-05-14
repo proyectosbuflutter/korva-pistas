@@ -169,12 +169,10 @@ function renderizarCalendario() {
 function obtenerReservasUnicas(dia) {
     const reservasMap = new Map();
     
-    for (let h = HORA_INICIO; h < HORA_FIN; h++) {
-        const horaKey = `${h.toString().padStart(2, '0')}:00`;
-        const storageKey = `${estado.pistaActiva}_${dia}_${horaKey}`;
-        
-        if (estado.horarios[storageKey]) {
-            const reserva = estado.horarios[storageKey];
+    Object.keys(estado.horarios).forEach(key => {
+        const partes = key.split('_');
+        if (parseInt(partes[0]) === estado.pistaActiva && partes[1] === dia) {
+            const reserva = estado.horarios[key];
             if (!reservasMap.has(reserva.horaInicio)) {
                 reservasMap.set(reserva.horaInicio, {
                     horaInicio: reserva.horaInicio,
@@ -184,7 +182,7 @@ function obtenerReservasUnicas(dia) {
                 });
             }
         }
-    }
+    });
     
     const reservas = Array.from(reservasMap.values());
     reservas.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
