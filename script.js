@@ -2,7 +2,7 @@
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const HORA_INICIO = 7;
 const HORA_FIN = 23;
-const ALTURA_DIA = 500;
+const PIXELS_POR_HORA = 45; // Cada hora ocupa 45px de alto
 
 // Generar array de horas
 const horas = [];
@@ -71,7 +71,7 @@ function activarPista(id) {
     renderizarCalendario();
 }
 
-// ==================== CALENDARIO CON CLICK EN LIBRES ====================
+// ==================== CALENDARIO LISTA APILADA ====================
 function renderizarCalendario() {
     const container = document.getElementById('weeklySchedule');
     if (!container) return;
@@ -86,7 +86,6 @@ function renderizarCalendario() {
         const claseHoy = esHoy ? 'today' : '';
         const fechaMostrar = esHoy ? fechaHoy : '';
         
-        // Obtener reservas únicas y ordenadas
         const reservas = obtenerReservasUnicas(dia);
         
         html += `
@@ -99,36 +98,32 @@ function renderizarCalendario() {
         `;
         
         if (reservas.length === 0) {
-            // Día completamente libre - AHORA CON CLICK
             html += `
                 <div class="time-slot free" onclick="openActivityModal('${dia}', '${HORA_INICIO}:00')" 
-                     style="top: 0; height: 100%; position: relative; cursor: pointer;">
+                     style="height: 100%; min-height: 200px; cursor: pointer;">
                     <span class="slot-time">${HORA_INICIO}:00 - ${HORA_FIN}:00</span>
                     <span style="color: #cbd5e1; font-size: 0.7rem;">Libre (click para añadir)</span>
                 </div>
             `;
         } else {
-            // Generar bloques con huecos
             const bloques = generarBloquesConHuecos(reservas);
             
             bloques.forEach(bloque => {
-                const top = calcularPosicionTop(bloque.horaInicio);
+                // Altura dinámica en píxeles
                 const height = calcularAlturaBloque(bloque.horaInicio, bloque.horaFin);
                 
                 if (bloque.tipo === 'free') {
-                    // Hueco libre - AHORA CON CLICK
                     html += `
                         <div class="time-slot free" onclick="openActivityModal('${dia}', '${bloque.horaInicio}')" 
-                             style="top: ${top}px; height: ${height}px; cursor: pointer;">
+                             style="height: ${height}px; min-height: 30px; cursor: pointer;">
                             <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
                             <span style="color: #cbd5e1; font-size: 0.7rem;">Libre</span>
                         </div>
                     `;
                 } else {
-                    // Reserva ocupada
                     html += `
                         <div class="time-slot occupied" onclick="openActivityModal('${dia}', '${bloque.horaInicio}')" 
-                             style="top: ${top}px; height: ${height}px;">
+                             style="height: ${height}px;">
                             <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
                             <span class="slot-type">${bloque.tipo}</span>
                             <span class="slot-desc">${bloque.desc}</span>
@@ -206,23 +201,13 @@ function generarBloquesConHuecos(reservas) {
     return bloques;
 }
 
-function calcularPosicionTop(hora) {
-    const [h, m] = hora.split(':').map(Number);
-    const minutosDesdeInicio = (h - HORA_INICIO) * 60 + m;
-    const minutosTotales = (HORA_FIN - HORA_INICIO) * 60;
-    return (minutosDesdeInicio / minutosTotales) * ALTURA_DIA;
-}
-
+// Calcula altura en píxeles basada en duración (1h = 45px)
 function calcularAlturaBloque(horaInicio, horaFin) {
     const [h1, m1] = horaInicio.split(':').map(Number);
     const [h2, m2] = horaFin.split(':').map(Number);
     
-    const minutosInicio = (h1 - HORA_INICIO) * 60 + m1;
-    const minutosFin = (h2 - HORA_INICIO) * 60 + m2;
-    const duracionMinutos = minutosFin - minutosInicio;
-    
-    const minutosTotales = (HORA_FIN - HORA_INICIO) * 60;
-    return (duracionMinutos / minutosTotales) * ALTURA_DIA;
+    const duracionHoras = (h2 + m2/60) - (h1 + m1/60);
+    return Math.max(duracionHoras * PIXELS_POR_HORA, 40); // Mínimo 40px
 }
 
 // ==================== MODALES ====================
