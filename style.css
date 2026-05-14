@@ -32,12 +32,21 @@ body {
     flex-grow: 1;
 }
 
-.nav-home-link {
+.nav-link {
     text-decoration: none;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: #0f172a;
+}
+
+.nav-link.home {
     color: #3b82f6;
     font-weight: 600;
-    font-size: 0.95rem;
-    margin-right: 20px;
 }
 
 .nav-title {
@@ -56,18 +65,6 @@ body {
     align-items: center;
 }
 
-.nav-link {
-    text-decoration: none;
-    color: #64748b;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.nav-link:hover {
-    color: #0f172a;
-}
-
 .nav-link.logout {
     color: #ef4444;
 }
@@ -79,10 +76,134 @@ body {
 /* CONTENIDO PRINCIPAL */
 .main-content {
     flex: 1;
-    padding: 40px 20px 100px; /* 100px abajo para el footer fijo */
+    padding: 60px 20px 100px;
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
+}
+
+.brand-section {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.brand-section h1 {
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: #1e293b;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.brand-section .subtitle {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin-top: 8px;
+    font-weight: 300;
+}
+
+/* TARJETAS */
+.cards-container {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 40px 30px;
+    width: 200px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    border-color: #cbd5e1;
+}
+
+.card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.card-line {
+    width: 40px;
+    height: 1px;
+    background-color: #cbd5e1;
+    margin-bottom: 16px;
+}
+
+.card.premium .card-line.premium-line {
+    background-color: #d97706;
+    width: 50px;
+    height: 2px;
+}
+
+.badge {
+    background: #d97706;
+    color: white;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.card-desc {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 300;
+    line-height: 1.4;
+}
+
+.card.premium {
+    border: 1px solid #fcd34d;
+    background: #fffbeb;
+}
+
+.card.premium h3 {
+    color: #92400e;
+}
+
+/* FOOTER FIJO */
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    padding: 15px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    z-index: 50;
+}
+
+/* ==================== */
+/* PÁGINA DE PISTAS     */
+/* ==================== */
+
+.pistas-page {
+    padding-bottom: 80px;
 }
 
 /* TABS */
@@ -178,6 +299,7 @@ body {
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     overflow: hidden;
+    min-height: 600px;
 }
 
 .day-header {
@@ -187,7 +309,7 @@ body {
     font-weight: 600;
     color: #475569;
     font-size: 0.9rem;
-    height: 60px; /* Altura fija del header */
+    height: 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -213,7 +335,7 @@ body {
     display: flex;
     flex-direction: column;
     position: relative;
-    min-height: 500px; /* Altura mínima para que se vea bien */
+    padding: 8px;
 }
 
 .time-slot {
@@ -232,6 +354,7 @@ body {
     justify-content: center;
     gap: 2px;
     padding: 4px;
+    overflow: hidden;
 }
 
 .time-slot:hover {
@@ -270,29 +393,6 @@ body {
     font-size: 0.75rem;
     color: #64748b;
     line-height: 1.2;
-}
-
-.time-slot.blocked {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-/* FOOTER FIJO */
-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    border-top: 1px solid #e2e8f0;
-    padding: 15px;
-    text-align: center;
-    font-size: 0.8rem;
-    color: #94a3b8;
-    z-index: 50;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
 }
 
 /* MODALES */

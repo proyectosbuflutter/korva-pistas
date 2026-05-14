@@ -1,8 +1,8 @@
 // ==================== CONFIGURACIÓN ====================
 const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-const HORA_INICIO = 7; // 07:00
-const HORA_FIN = 23;   // 23:00
-const ALTURA_DIA = 500; // Altura en píxeles del área de horarios
+const HORA_INICIO = 7;
+const HORA_FIN = 23;
+const ALTURA_DIA = 500;
 
 // Generar array de horas
 const horas = [];
@@ -71,7 +71,7 @@ function activarPista(id) {
     renderizarCalendario();
 }
 
-// ==================== CALENDARIO CON ALTURA DINÁMICA ====================
+// ==================== CALENDARIO CORREGIDO ====================
 function renderizarCalendario() {
     const container = document.getElementById('weeklySchedule');
     if (!container) return;
@@ -86,8 +86,8 @@ function renderizarCalendario() {
         const claseHoy = esHoy ? 'today' : '';
         const fechaMostrar = esHoy ? fechaHoy : '';
         
-        // Obtener todas las reservas de este día y ordenarlas por hora
-        const reservasDia = obtenerReservasOrdenadas(dia);
+        // Obtener reservas únicas y ordenadas
+        const reservas = obtenerReservasUnicas(dia);
         
         html += `
             <div class="day-column">
@@ -95,36 +95,44 @@ function renderizarCalendario() {
                     ${dia}
                     ${fechaMostrar ? `<span class="date">${fechaMostrar}</span>` : ''}
                 </div>
-                <div class="time-slots" style="height: ${ALTURA_DIA}px;">
+                <div class="time-slots">
         `;
         
-        // Generar bloques (reservas + huecos libres)
-        const bloques = generarBloquesConHuecos(reservasDia);
-        
-        bloques.forEach(bloque => {
-            const top = calcularPosicionTop(bloque.horaInicio);
-            const height = calcularAlturaBloque(bloque.horaInicio, bloque.horaFin);
+        if (reservas.length === 0) {
+            // Día completamente libre
+            html += `
+                <div class="time-slot free" style="top: 0; height: 100%; position: relative;">
+                    <span class="slot-time">${HORA_INICIO}:00 - ${HORA_FIN}:00</span>
+                    <span style="color: #cbd5e1; font-size: 0.7rem;">Libre</span>
+                </div>
+            `;
+        } else {
+            // Generar bloques con huecos
+            const bloques = generarBloquesConHuecos(reservas);
             
-            if (bloque.tipo === 'free') {
-                // Hueco libre
-                html += `
-                    <div class="time-slot free" style="top: ${top}px; height: ${height}px;">
-                        <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
-                        <span style="color: #cbd5e1; font-size: 0.7rem;">Libre</span>
-                    </div>
-                `;
-            } else {
-                // Reserva ocupada
-                html += `
-                    <div class="time-slot occupied" onclick="openActivityModal('${dia}', '${bloque.horaInicio}')" 
-                         style="top: ${top}px; height: ${height}px;">
-                        <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
-                        <span class="slot-type">${bloque.tipo}</span>
-                        <span class="slot-desc">${bloque.desc}</span>
-                    </div>
-                `;
-            }
-        });
+            bloques.forEach(bloque => {
+                const top = calcularPosicionTop(bloque.horaInicio);
+                const height = calcularAlturaBloque(bloque.horaInicio, bloque.horaFin);
+                
+                if (bloque.tipo === 'free') {
+                    html += `
+                        <div class="time-slot free" style="top: ${top}px; height: ${height}px;">
+                            <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
+                            <span style="color: #cbd5e1; font-size: 0.7rem;">Libre</span>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="time-slot occupied" onclick="openActivityModal('${dia}', '${bloque.horaInicio}')" 
+                             style="top: ${top}px; height: ${height}px;">
+                            <span class="slot-time">${bloque.horaInicio} - ${bloque.horaFin}</span>
+                            <span class="slot-type">${bloque.tipo}</span>
+                            <span class="slot-desc">${bloque.desc}</span>
+                        </div>
+                    `;
+                }
+            });
+        }
         
         html += '</div></div>';
     });
@@ -133,22 +141,30 @@ function renderizarCalendario() {
     container.innerHTML = html;
 }
 
-function obtenerReservasOrdenadas(dia) {
-    const reservas = [];
+function obtenerReservasUnicas(dia) {
+    const reservasMap = new Map();
     
-    horas.forEach(hora => {
-        const key = `${estado.pistaActiva}_${dia}_${hora}`;
-        if (estado.horarios[key]) {
-            reservas.push({
-                horaInicio: estado.horarios[key].horaInicio,
-                horaFin: estado.horarios[key].horaFin,
-                tipo: estado.horarios[key].tipo,
-                desc: estado.horarios[key].desc
-            });
+    // Recorrer todas las horas posibles
+    for (let h = HORA_INICIO; h < HORA_FIN; h++) {
+        const horaKey = `${h.toString().padStart(2, '0')}:00`;
+        const storageKey = `${estado.pistaActiva}_${dia}_${horaKey}`;
+        
+        if (estado.horarios[storageKey]) {
+            const reserva = estado.horarios[storageKey];
+            // Usar horaInicio como clave única para evitar duplicados
+            if (!reservasMap.has(reserva.horaInicio)) {
+                reservasMap.set(reserva.horaInicio, {
+                    horaInicio: reserva.horaInicio,
+                    horaFin: reserva.horaFin,
+                    tipo: reserva.tipo,
+                    desc: reserva.desc
+                });
+            }
         }
-    });
+    }
     
-    // Ordenar por hora de inicio
+    // Convertir a array y ordenar
+    const reservas = Array.from(reservasMap.values());
     reservas.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
     
     return reservas;
@@ -159,7 +175,7 @@ function generarBloquesConHuecos(reservas) {
     let horaActual = `${HORA_INICIO.toString().padStart(2, '0')}:00`;
     
     reservas.forEach(reserva => {
-        // Si hay hueco antes de esta reserva, añadirlo
+        // Si hay hueco antes de esta reserva
         if (reserva.horaInicio > horaActual) {
             bloques.push({
                 tipo: 'free',
@@ -180,7 +196,7 @@ function generarBloquesConHuecos(reservas) {
         horaActual = reserva.horaFin;
     });
     
-    // Si queda tiempo hasta el final, añadir hueco libre
+    // Hueco final si queda tiempo
     const horaFinDia = `${HORA_FIN.toString().padStart(2, '0')}:00`;
     if (horaActual < horaFinDia) {
         bloques.push({
@@ -247,10 +263,7 @@ function openActivityModal(dia, hora) {
     document.getElementById('activityDay').value = dia;
     document.getElementById('activityTimeStart').value = hora;
     
-    const horaNum = parseInt(hora.split(':')[0]);
-    const horaFin = `${(horaNum + 1).toString().padStart(2, '0')}:00`;
-    document.getElementById('activityTimeEnd').value = horaFin;
-    
+    // Buscar la reserva existente para obtener horaFin real
     const key = `${estado.pistaActiva}_${dia}_${hora}`;
     const actividad = estado.horarios[key];
     
@@ -260,6 +273,9 @@ function openActivityModal(dia, hora) {
         document.getElementById('activityType').value = actividad.tipo;
         document.getElementById('activityDesc').value = actividad.desc;
     } else {
+        const horaNum = parseInt(hora.split(':')[0]);
+        const horaFin = `${(horaNum + 1).toString().padStart(2, '0')}:00`;
+        document.getElementById('activityTimeEnd').value = horaFin;
         document.getElementById('activityType').value = 'Partido';
         document.getElementById('activityDesc').value = '';
     }
@@ -314,6 +330,7 @@ function saveActivity() {
         return;
     }
     
+    // Guardar usando horaInicio como clave
     const key = `${estado.pistaActiva}_${estado.currentSlot.dia}_${horaInicio}`;
     estado.horarios[key] = { 
         tipo, 
@@ -329,8 +346,15 @@ function saveActivity() {
 
 function clearSlot() {
     if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
-        const key = `${estado.pistaActiva}_${estado.currentSlot.dia}_${estado.currentSlot.hora}`;
-        delete estado.horarios[key];
+        // Buscar y eliminar todas las claves que coincidan
+        Object.keys(estado.horarios).forEach(key => {
+            const [pistaId, dia, hora] = key.split('_');
+            if (parseInt(pistaId) === estado.pistaActiva && 
+                dia === estado.currentSlot.dia && 
+                hora === estado.currentSlot.hora) {
+                delete estado.horarios[key];
+            }
+        });
         
         guardarEstado();
         renderizarCalendario();
